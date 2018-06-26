@@ -187,25 +187,26 @@ class GPG {
 		// about, and make sure they haven't been touched.
 		$retarr['status'] = GPG::STATE_GOOD | GPG::STATE_TRUSTED;
 		$retarr['details'] = array();
-
-		foreach ($module['hashes'] as $file => $hash) {
-			$dest = \FreePBX::Installer()->getDestination($modulename, $file, true);
-			if ($dest === false) {
-				// If the file is explicitly un-checkable, ignore it.
-				continue;
-			}
-			if (!file_exists($dest)) {
-				$retarr['details'][] = $dest." "._("missing");
-				$retarr['status'] |= GPG::STATE_TAMPERED;
-				$retarr['status'] &= ~GPG::STATE_GOOD;
-			} elseif (hash_file('sha256', $dest) != $hash) {
-				// If you i18n this string, also note that it's used explicitly
-				// as a comparison of "altered" in modulefunctions.class, to
-				// warn people about bin/fwconsole needing to be updated
-				// with 'fwconsole chown'. Don't make them different!
-				$retarr['details'][] = $dest." "._("altered");
-				$retarr['status'] |= GPG::STATE_TAMPERED;
-				$retarr['status'] &= ~GPG::STATE_GOOD;
+		if(is_array($module['hashes'])) {
+			foreach ($module['hashes'] as $file => $hash) {
+				$dest = \FreePBX::Installer()->getDestination($modulename, $file, true);
+				if ($dest === false) {
+					// If the file is explicitly un-checkable, ignore it.
+					continue;
+				}
+				if (!file_exists($dest)) {
+					$retarr['details'][] = $dest." "._("missing");
+					$retarr['status'] |= GPG::STATE_TAMPERED;
+					$retarr['status'] &= ~GPG::STATE_GOOD;
+				} elseif (hash_file('sha256', $dest) != $hash) {
+					// If you i18n this string, also note that it's used explicitly
+					// as a comparison of "altered" in modulefunctions.class, to
+					// warn people about bin/fwconsole needing to be updated
+					// with 'fwconsole chown'. Don't make them different!
+					$retarr['details'][] = $dest." "._("altered");
+					$retarr['status'] |= GPG::STATE_TAMPERED;
+					$retarr['status'] &= ~GPG::STATE_GOOD;
+				}
 			}
 		}
 
